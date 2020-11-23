@@ -8,6 +8,10 @@ from sys import argv
 from re import search
 import docopt
 import random
+from colorama import Fore, Style, init
+
+init(autoreset=True)
+
 
 """
  [] Import args
@@ -71,6 +75,8 @@ def main_function():
                 print(matchDate.group(1))
                 found_date = matchDate.group(2)
                 collect_data[found_date] = dict()
+                save_values = {}
+                break_calc = []
                 continue
 
             # Get the start line and print the date
@@ -126,17 +132,32 @@ def main_function():
                     print("\t\t\tConsider to book the remaining time of '%s' to an other day!" % timedelta(seconds=(sumwork - 36000)))
                 print("  Break summary :\t(%s)   # %s break(s)\n" %
                       (timedelta(seconds=sum(sumbreak)), count_break))
-                save_values.update({'breaks' : sum(break_calc)})
-                
-                collect_data[found_date] = save_values
                 # Reset variables to avoid further calculation on the current values
                 sumbreak = []
-                break_calc = []
-                save_values = {}
                 breakstop = ''
                 count_break = int(0)
+            save_values.update({'breaks' : sum(break_calc)})
+            collect_data[found_date] = save_values
     f.closed
-    print(collect_data)
+
+    for booking in collect_data:
+        print(booking)
+        work_day = collect_data[booking]
+        if 'start' in collect_data[booking] and 'end' in collect_data[booking]:
+            print(f"Work begin: \t{format_date(work_day['start'])}")
+            print(f"Work end:   \t{format_date(work_day['end'])}")
+            print(f"Work time:  \t{Fore.LIGHTYELLOW_EX}{timedelta(seconds=(int(work_day['end']) - int(work_day['start']) - int(work_day['breaks'])))}")
+        else:
+            time_now = time.strftime('%s', time.localtime())
+            print(f"Work begin: \t{format_date(work_day['start'])}")
+            print(f"Work time:  \t{Fore.LIGHTYELLOW_EX}{timedelta(seconds=(int(time_now) - int(work_day['start']) - int(work_day['breaks'])))}")
+        #if 'breaks' in work_day and work_day['breaks'] > 0:
+        print(f"Break gime: \t{timedelta(seconds=collect_data[booking]['breaks'])}")
+        # else:
+        #     print('No break found! (Shame on you!)')
+
+
+
     
 if __name__ == '__main__':
     #ARGS=docopt.docopt(__doc__, version='Application %s' % __version__)
